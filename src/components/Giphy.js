@@ -24,6 +24,23 @@ const Giphy = () => {
     };
     fetchGiphyData();
   }, []);
+  const searchHandle = (e) => {
+    try {
+      setSearchInput(e.target.value);
+      setTimeout(async () => {
+        const result = await axios("https://api.giphy.com/v1/gifs/search", {
+          params: {
+            api_key: "jSgDMd629zG9yk9mCCcDYqDjmcVelHV6",
+            q: searchInput,
+          },
+        });
+        console.log("after onChange: ", result?.data.data);
+        setData(result?.data.data);
+      }, 4000);
+    } catch (er) {
+      console.log(er);
+    }
+  };
   return isLoading ? (
     <div>
       <h1>Loading...</h1>
@@ -41,26 +58,7 @@ const Giphy = () => {
       >
         <input
           type="text"
-          onChange={(e) => {
-            try {
-              //   console.log("before onChange: ", data);
-
-              setSearchInput(e.target.value);
-              setTimeout(async () => {
-                const result = await axios(
-                  "https://api.giphy.com/v1/gifs/search",
-                  {
-                    params: {
-                      api_key: "jSgDMd629zG9yk9mCCcDYqDjmcVelHV6",
-                      q: searchInput,
-                    },
-                  }
-                );
-                console.log("after onChange: ", result?.data.data);
-                setData(result?.data.data);
-              }, 4000);
-            } catch (er) {}
-          }}
+          onChange={searchHandle}
           value={searchInput}
           placeholder="Search..."
         />
