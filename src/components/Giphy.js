@@ -1,52 +1,23 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { Fragment, useState } from "react";
 import { nanoid } from "nanoid";
+import { useQuery } from "react-query";
+import { fetchGiphyData } from "./fetcherQuery";
 const Giphy = () => {
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchInput, setSearchInput] = useState("");
-
-  useEffect(() => {
-    const fetchGiphyData = async () => {
-      try {
-        setIsLoading(true);
-        const result = await axios("https://api.giphy.com/v1/gifs/trending", {
-          params: {
-            api_key: "jSgDMd629zG9yk9mCCcDYqDjmcVelHV6",
-          },
-        });
-        console.log("Giphy Results: ", result?.data.data);
-        setData(result?.data.data);
-        setIsLoading(false);
-      } catch (er) {
-        console.log("JS catched an error: ", er);
-      }
-    };
-    fetchGiphyData();
-  }, []);
-  const searchHandle = (e) => {
-    try {
-      setSearchInput(e.target.value);
-      setTimeout(async () => {
-        const result = await axios("https://api.giphy.com/v1/gifs/search", {
-          params: {
-            api_key: "jSgDMd629zG9yk9mCCcDYqDjmcVelHV6",
-            q: searchInput,
-          },
-        });
-        console.log("after onChange: ", result?.data.data);
-        setData(result?.data.data);
-      }, 4000);
-    } catch (er) {
-      console.log(er);
-    }
-  };
-  return isLoading ? (
-    <div>
-      <h1>Loading...</h1>
-    </div>
-  ) : (
-    <main className="container">
+  const { data, isLoading, refetch } = useQuery(
+    "gighy",
+    () => fetchGiphyData(searchInput),
+    { refetchOnWindowFocus: false }
+  );
+  React.useEffect(() => {
+    const searchTimer = setTimeout(() => {
+      refetch();
+    }, 3000);
+    return () => clearTimeout(searchTimer);
+  }, [searchInput]);
+  if (isLoading) return <h2>Loading...</h2>;
+  return (
+    <Fragment>
       <div
         style={{
           width: "100%",
@@ -58,18 +29,25 @@ const Giphy = () => {
       >
         <input
           type="text"
-          onChange={searchHandle}
-          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search..."
         />
       </div>
-      {data.map((element) => (
-        <div key={nanoid()}>
-          <img src={element?.images.fixed_height.url} alt="" />
-          <h3>{element?.images.fixed_height.url}</h3>
-        </div>
-      ))}
-    </main>
+      <main
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        {data?.data.map((element) => (
+          <div key={nanoid()}>
+            <img src={element?.images.fixed_height.url} alt="" />
+          </div>
+        ))}
+      </main>
+    </Fragment>
   );
 };
 
